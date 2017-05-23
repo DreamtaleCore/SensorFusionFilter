@@ -138,6 +138,11 @@ public class MainActivity extends AppCompatActivity {
     private DataSynchronizer mMdSynchronizer = new DataSynchronizer();
     private SensorDataProcessor mSensorDataProcessor;
     private File mFileForDebug;
+    private DebugDataWriter mDataTimeCmpRecorderMag = new DebugDataWriter(mContext);
+    private DebugDataWriter mDataTimeCmpRecorderAcc = new DebugDataWriter(mContext);
+    private DebugDataWriter mDataTimeCmpRecorderGyr = new DebugDataWriter(mContext);
+    private DebugDataWriter mDataTimeCmpRecorderLin = new DebugDataWriter(mContext);
+    private DebugDataWriter mDataSyncCmpRecorderSen = new DebugDataWriter(mContext);
 
     private void initAndSetupAllSensors() {
         mSensorManager = (SensorManager) this.getSystemService(SENSOR_SERVICE);
@@ -183,6 +188,17 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mDataTimeCmpRecorderMag.setFileName("mDataTimeCmpRecorderMag.csv");
+        mDataTimeCmpRecorderMag.writeData("mag,");
+        mDataTimeCmpRecorderAcc.setFileName("mDataTimeCmpRecorderAcc.csv");
+        mDataTimeCmpRecorderAcc.writeData("acc,");
+        mDataTimeCmpRecorderGyr.setFileName("mDataTimeCmpRecorderGyr.csv");
+        mDataTimeCmpRecorderGyr.writeData("gyr,");
+        mDataTimeCmpRecorderLin.setFileName("mDataTimeCmpRecorderLin.csv");
+        mDataTimeCmpRecorderLin.writeData("lin,");
+        mDataSyncCmpRecorderSen.setFileName("mDataSyncCmpRecorderSen.csv");
+        mDataSyncCmpRecorderSen.writeData("sync,");
     }
 
     private void startMotionSensors() {
@@ -208,15 +224,19 @@ public class MainActivity extends AppCompatActivity {
                 switch (event.sensor.getType()) {
                     case Sensor.TYPE_GYROSCOPE:
                         mdCurrent.type = DataStructure.DATA_TYPE_GYR;
+                        mDataTimeCmpRecorderGyr.writeData("" + mdCurrent.timestamp + ",");
                         break;
                     case Sensor.TYPE_ACCELEROMETER:
                         mdCurrent.type = DataStructure.DATA_TYPE_ACC;
+                        mDataTimeCmpRecorderAcc.writeData("" + mdCurrent.timestamp + ",");
                         break;
                     case Sensor.TYPE_MAGNETIC_FIELD:
                         mdCurrent.type = DataStructure.DATA_TYPE_MAG;
+                        mDataTimeCmpRecorderMag.writeData("" + mdCurrent.timestamp + ",");
                         break;
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         mdCurrent.type = DataStructure.DATA_TYPE_LIN;
+                        mDataTimeCmpRecorderLin.writeData("" + mdCurrent.timestamp + ",");
                         break;
                     default:
                         break;
@@ -224,6 +244,8 @@ public class MainActivity extends AppCompatActivity {
                 mMdSynchronizer.push(mdCurrent);
 
                 if(mMdSynchronizer.synchronize(mMotionData)) {
+                    mDataSyncCmpRecorderSen.writeData("" + (long)mMotionData[12] + ",");
+
                     if(mIsFirstIn) {
                         mLastTimestamp = mMotionData[SENSOR_NUM - 1];
                         mIsFirstIn = false;
